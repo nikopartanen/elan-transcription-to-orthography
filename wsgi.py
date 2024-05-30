@@ -4,7 +4,6 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_bootstrap import Bootstrap
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
-import pympi
 
 application = Flask(__name__)
 application.config['UPLOAD_FOLDER'] = 'uploads'
