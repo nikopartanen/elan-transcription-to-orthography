@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Upload EAF File</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="py-5 text-center">
+            <img class="d-block mx-auto mb-4" src="/static/logo.png" alt="DALLE-generated logo for the collaboration" width="200" height="200">
+            <h2>Upload a .eaf XML file</h2>
+        </div>
+        <div class="row">
+            <div class="col-md-12 order-md-1">
+                <form action="/results" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <div class="mb-3">
+                        <label for="file">Select File</label>
+                        <input type="file" class="form-control-file" id="file" name="file" required>
+                        <div class="invalid-feedback">
+                            Please select an ELAN file with Makurap transcription in IPA. 
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-lg btn-block" type="submit">Upload</button>
+                </form>
+                {% if error %}
+                <div class="mt-4 alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <p>Authors: Niko Partanen, Jack Rueter and Ana Vilacy Galucio. For questions, please contact nikotapiopartanen@gmail.com. This work is part of Amazonian-Uralic collaboration between University of Helsinki and Universidade Federal do Pará (UFPA).</p>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>
