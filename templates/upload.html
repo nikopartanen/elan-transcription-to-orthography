@@ -1,40 +1,48 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Upload EAF File</title>
+    <meta charset="UTF-8">
+    <title>Upload File</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 </head>
-<body class="bg-light">
-    <div class="container">
-        <div class="py-5 text-center">
-            <img class="d-block mx-auto mb-4" src="/static/logo.png" alt="DALLE-generated logo for the collaboration" width="200" height="200">
-            <h2>Upload a .eaf XML file</h2>
+<body>
+<div class="container mt-5">
+    <h1 class="mb-3">Upload File</h1>
+    <form action="{{ url_for('results') }}" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="file">Please upload an ELAN file with Makurap transcription in IPA. The transcription to orthography transformation can be tested below. </label>
+            <input type="file" class="form-control" id="file" name="file">
         </div>
-        <div class="row">
-            <div class="col-md-12 order-md-1">
-                <form action="/results" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-                    <div class="mb-3">
-                        <label for="file">Select File</label>
-                        <input type="file" class="form-control-file" id="file" name="file" required>
-                        <div class="invalid-feedback">
-                            Please select an ELAN file with Makurap transcription in IPA. 
-                        </div>
-                    </div>
-                    <button class="btn btn-primary btn-lg btn-block" type="submit">Upload</button>
-                </form>
-                {% if error %}
-                <div class="mt-4 alert alert-danger" role="alert">
-                    {{ error }}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        <p>Authors: Niko Partanen, Jack Rueter and Ana Vilacy Galucio. For questions, please contact nikotapiopartanen@gmail.com. This work is part of Amazonian-Uralic collaboration between University of Helsinki and Universidade Federal do Pará (UFPA).</p>
-    </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
 
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <h2 class="mt-5">Real-time Orthography Transformation</h2>
+    <div class="form-group">
+        <label for="phonetic-input">Phonetic Input</label>
+        <textarea class="form-control" id="phonetic-input" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+        <label for="orthographic-output">Orthographic Output</label>
+        <textarea class="form-control" id="orthographic-output" rows="3" readonly></textarea>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#phonetic-input').on('input', function() {
+            var phoneticText = $(this).val();
+            $.ajax({
+                url: "{{ url_for('transform') }}",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({phonetic_text: phoneticText}),
+                success: function(response) {
+                    $('#orthographic-output').val(response.orthographic_text);
+                }
+            });
+        });
+    });
+</script>
 </body>
 </html>
