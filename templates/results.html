@@ -8,12 +8,33 @@
 <body class="bg-light">
     <div class="container">
         <div class="py-5 text-center">
-            <h2>File processed succesfully</h2>
+            <h2>File processed successfully</h2>
         </div>
         <div class="row">
             <div class="col-md-12 order-md-1">
-                <a href="{{ url_for('download_file', filename=download_filename) }}">Download ELAN file with Makurap orthography tier completed automatically</a>
+                <a href="{{ url_for('download_file', filename=download_filename) }}" class="btn btn-primary">Download ELAN file with Makurap orthography tier completed automatically</a>
                 <a href="/" class="btn btn-secondary btn-lg btn-block">Go back</a>
+            </div>
+        </div>
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <h3>Transformed Annotations</h3>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Original Annotation</th>
+                            <th>Transformed Annotation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for original, transformed in annotations %}
+                        <tr>
+                            <td>{{ original }}</td>
+                            <td>{{ transformed }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
