@@ -17,7 +17,6 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def phonetic_to_orthography(phonetic):
-    # Define the mapping rules from phonetic to orthography for digraphs and single phonemes
     mapping = {
         'tʃ': 'x',
         "ã": "ã",
@@ -85,11 +84,65 @@ def phonetic_to_orthography(phonetic):
     }
 
     orthographic = phonetic
-    # Apply the mapping rules
     for key in mapping:
         orthographic = orthographic.replace(key, mapping[key])
 
     return orthographic
+
+def transform_annotations_for_all_participants(source_file):
+    tree = ET.parse(source_file)
+    root = tree.getroot()
+    transformed_annotations = []
+
+    for tier in root.findall('TIER'):
+        if 'PARTICIPANT' in tier.attrib and tier.attrib['LINGUISTIC_TYPE_REF'] == 'Transcription':
+            participant = tier.attrib['PARTICIPANT']
+            source_tier_id = tier.attrib['TIER_ID']
+            target_tier_id = f"{participant}_Ortography-gls-mpu"
+
+            target_tier = None
+            for existing_tier in root.findall('TIER'):
+                if existing_tier.get('TIER_ID') == target_tier_id:
+                    target_tier = existing_tier
+                    break
+
+            if target_tier is None:
+                target_tier = ET.SubElement(root, 'TIER', {
+                    'LINGUISTIC_TYPE_REF': 'Ortografia',
+                    'PARENT_REF': source_tier_id,
+                    'PARTICIPANT': participant,
+                    'TIER_ID': target_tier_id
+                })
+                ET.SubElement(target_tier, 'ANNOTATION')
+
+            for annotation in tier.findall('ANNOTATION/ALIGNABLE_ANNOTATION'):
+                annotation_id = annotation.get('ANNOTATION_ID')
+                annotation_value_element = annotation.find('ANNOTATION_VALUE')
+                annotation_text = annotation_value_element.text if annotation_value_element is not None else ""
+
+                if annotation_text.strip():
+                    transformed_text = phonetic_to_orthography(annotation_text)
+                    transformed_annotations.append((annotation_text, transformed_text))
+
+                    new_annotation = ET.Element('ALIGNABLE_ANNOTATION', {
+                        'ANNOTATION_ID': annotation_id,
+                        'TIME_SLOT_REF1': annotation.get('TIME_SLOT_REF1'),
+                        'TIME_SLOT_REF2': annotation.get('TIME_SLOT_REF2')
+                    })
+                    new_annotation_value = ET.SubElement(new_annotation, 'ANNOTATION_VALUE')
+                    new_annotation_value.text = transformed_text
+
+                    target_tier.find('ANNOTATION').append(new_annotation)
+
+    return ET.ElementTree(root), transformed_annotations
+
+def transform_eaf(file_path):
+    transformed_path = os.path.join(application.config['UPLOAD_FOLDER'], 'orthography_' + os.path.basename(file_path))
+
+    tree, transformed_annotations = transform_annotations_for_all_participants(file_path)
+    tree.write(transformed_path, encoding='UTF-8', xml_declaration=True)
+
+    return transformed_path, transformed_annotations
 
 @application.route('/', methods=['GET'])
 def upload():
@@ -116,12 +169,12 @@ def results():
         file_path = os.path.join(application.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
         try:
-            # Example transformation (adjust as needed)
-            transformed_file_path = transform_eaf(file_path)
+            transformed_file_path, transformed_annotations = transform_eaf(file_path)
             transformed_filename = os.path.basename(transformed_file_path)
             
             return render_template('results.html', 
-                                   download_filename=transformed_filename)
+                                   download_filename=transformed_filename,
+                                   annotations=transformed_annotations)
         except ET.ParseError:
             error = "The uploaded file is not a valid .eaf XML file."
             return render_template('upload.html', error=error)
