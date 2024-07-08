@@ -89,6 +89,62 @@ def phonetic_to_orthography(phonetic):
 
     return orthographic
 
+def orthography_to_phonetic(orthography):
+    mapping = {
+        'x': 'tʃ',
+        "ã": "ã",
+        "õ": "õ",
+        "ẽ": "ẽ",
+        "ĩ": "ĩ",
+        "ũ": "ũ",
+        'oã': 'õã',
+        'oĩ': 'õĩ',
+        'uã': 'ũã',
+        'mb': 'ᵐb',
+        'ng': 'ᵑg',
+        'nd': 'ⁿd',
+        'w': 'β',
+        'on': 'õn',
+        'in': 'ĩn',
+        'en': 'ẽn',
+        'an': 'ãn',
+        'oɲ': 'õɲ',
+        'iɲ': 'ĩɲ',
+        'eɲ': 'ẽɲ',
+        'aɲ': 'ãɲ',
+        'om': 'õm',
+        'im': 'ĩm',
+        'em': 'ẽm',
+        'am': 'ãm',
+        'o': 'u',
+        'un': 'ɨ̃n',
+        'uɲ': 'ɨ̃ɲ',
+        'um': 'ɨ̃m',
+        'u': 'ɨ',
+        'ee': 'e:',
+        'oo': 'o:',
+        'ii': 'i:',
+        'y': 'ɲ',
+        'pian': 'pi.ãn',
+        'r': 'ɾ',
+        'a': 'a',
+        'e': 'ɛ',
+        'o': 'o',
+        'p': 'p',
+        't': 't',
+        'm': 'm',
+        'n': 'n',
+        'k': 'k',
+        'w': 'w',
+        'i': 'i',
+    }
+
+    phonetic = orthography
+    for key in mapping:
+        phonetic = phonetic.replace(key, mapping[key])
+
+    return phonetic
+
 def transform_annotations_for_all_participants(source_file):
     tree = ET.parse(source_file)
     root = tree.getroot()
@@ -148,12 +204,19 @@ def transform_eaf(file_path):
 def upload():
     return render_template('upload.html')
 
-@application.route('/transform', methods=['POST'])
-def transform():
+@application.route('/transform_ipa', methods=['POST'])
+def transform_ipa():
     data = request.json
     phonetic_text = data.get('phonetic_text', '')
     orthographic_text = phonetic_to_orthography(phonetic_text)
     return jsonify({'orthographic_text': orthographic_text})
+
+@application.route('/transform_orthography', methods=['POST'])
+def transform_orthography():
+    data = request.json
+    orthographic_text = data.get('orthographic_text', '')
+    phonetic_text = orthography_to_phonetic(orthographic_text)
+    return jsonify({'phonetic_text': phonetic_text})
 
 @application.route('/results', methods=['POST'])
 def results():

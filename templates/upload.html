@@ -17,15 +17,26 @@
         <button type="submit" class="btn btn-primary">Upload</button>
     </form>
 
-    <h2 class="mt-5">Real-time Orthography Transformation</h2>
+    <h2 class="mt-5">Real-time IPA to Orthography Transformation</h2>
     <div class="form-group">
-        <label for="phonetic-input">Phonetic Input</label>
+        <label for="ipainput">Phonetic Input</label>
         <textarea class="form-control" id="phonetic-input" rows="3"></textarea>
     </div>
     <div class="form-group">
         <label for="orthographic-output">Orthographic Output</label>
         <textarea class="form-control" id="orthographic-output" rows="3" readonly></textarea>
     </div>
+
+    <h2 class="mt-5">Real-time Orthography to IPA Transformation</h2>
+    <div class="form-group">
+        <label for="orthographic-input">Orthographic Input</label>
+        <textarea class="form-control" id="orthographic-input" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+        <label for="ipa-output">IPA Output</label>
+        <textarea class="form-control" id="ipa-output" rows="3" readonly></textarea>
+    </div>
+
     <p><b>Authors:</b> Niko Partanen, Jack Rueter and Ana Vilacy Galucio. For questions, please contact nikotapiopartanen@gmail.com. This work is part of Amazonian-Uralic collaboration between University of Helsinki and Universidade Federal do Pará (UFPA).</p>
 </div>
 
@@ -35,12 +46,27 @@
         $('#phonetic-input').on('input', function() {
             var phoneticText = $(this).val();
             $.ajax({
-                url: "{{ url_for('transform') }}",
+                url: "{{ url_for('transform_ipa') }}",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({phonetic_text: phoneticText}),
                 success: function(response) {
                     $('#orthographic-output').val(response.orthographic_text);
+                }
+            });
+        });
+    });
+
+    $(document).ready(function() {
+        $('#orthographic-input').on('input', function() {
+            var orthographicText = $(this).val();
+            $.ajax({
+                url: "{{ url_for('transform_orthography') }}",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({orthographic_text: orthographicText}),
+                success: function(response) {
+                    $('#ipa-output').val(response.phonetic_text);
                 }
             });
         });
