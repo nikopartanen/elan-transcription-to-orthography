@@ -174,23 +174,26 @@ def transform_annotations_for_all_participants(source_file):
             for annotation in tier.findall('ANNOTATION/ALIGNABLE_ANNOTATION'):
                 annotation_id = annotation.get('ANNOTATION_ID')
                 annotation_value_element = annotation.find('ANNOTATION_VALUE')
-                annotation_text = annotation_value_element.text if annotation_value_element is not None else ""
+                
+                if annotation_value_element is not None:
+                    annotation_text = annotation_value_element.text if annotation_value_element.text is not None else ""
 
-                if annotation_text.strip():
-                    transformed_text = phonetic_to_orthography(annotation_text)
-                    transformed_annotations.append((annotation_text, transformed_text))
+                    if annotation_text.strip():
+                        transformed_text = phonetic_to_orthography(annotation_text)
+                        transformed_annotations.append((annotation_text, transformed_text))
 
-                    new_annotation = ET.Element('ALIGNABLE_ANNOTATION', {
-                        'ANNOTATION_ID': annotation_id,
-                        'TIME_SLOT_REF1': annotation.get('TIME_SLOT_REF1'),
-                        'TIME_SLOT_REF2': annotation.get('TIME_SLOT_REF2')
-                    })
-                    new_annotation_value = ET.SubElement(new_annotation, 'ANNOTATION_VALUE')
-                    new_annotation_value.text = transformed_text
+                        new_annotation = ET.Element('ALIGNABLE_ANNOTATION', {
+                            'ANNOTATION_ID': annotation_id,
+                            'TIME_SLOT_REF1': annotation.get('TIME_SLOT_REF1'),
+                            'TIME_SLOT_REF2': annotation.get('TIME_SLOT_REF2')
+                        })
+                        new_annotation_value = ET.SubElement(new_annotation, 'ANNOTATION_VALUE')
+                        new_annotation_value.text = transformed_text
 
-                    target_tier.find('ANNOTATION').append(new_annotation)
+                        target_tier.find('ANNOTATION').append(new_annotation)
 
     return ET.ElementTree(root), transformed_annotations
+
 
 def transform_eaf(file_path):
     transformed_path = os.path.join(application.config['UPLOAD_FOLDER'], 'orthography_' + os.path.basename(file_path))
@@ -231,18 +234,60 @@ def results():
         filename = secure_filename(file.filename)
         file_path = os.path.join(application.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
+        
+        validity_checks = []
+
+        # Perform validity checks
+        if not check_file_is_well_formed(file_path):
+            validity_checks.append("The file is not well-formed XML.")
+        if not check_tier_structure(file_path):
+            validity_checks.append("The tier structure is incorrect or missing expected tiers.")
+        if not check_annotations_have_values(file_path):
+            validity_checks.append("Some annotations do not have ANNOTATION_VALUE elements.")
+        # Add more checks as needed
+
+        if validity_checks:
+            return render_template('upload.html', error=' '.join(validity_checks))
+
         try:
             transformed_file_path, transformed_annotations = transform_eaf(file_path)
             transformed_filename = os.path.basename(transformed_file_path)
             
             return render_template('results.html', 
                                    download_filename=transformed_filename,
-                                   annotations=transformed_annotations)
+                                   annotations=transformed_annotations,
+                                   validity_checks=validity_checks)
         except ET.ParseError:
             error = "The uploaded file is not a valid .eaf XML file."
             return render_template('upload.html', error=error)
 
     return render_template('upload.html', error='Invalid file extension')
+
+
+# Example functions to check file validity
+def check_file_is_well_formed(file_path):
+    try:
+        ET.parse(file_path)
+        return True
+    except ET.ParseError:
+        return False
+
+def check_tier_structure(file_path):
+    tree = ET.parse(file_path)
+    root = tree.getroot()
+    # Example check: ensure there is at least one TIER element
+    return bool(root.find('TIER'))
+
+def check_annotations_have_values(file_path):
+    tree = ET.parse(file_path)
+    root = tree.getroot()
+    
+    for tier in root.findall('TIER'):
+        for annotation in tier.findall('ANNOTATION/ALIGNABLE_ANNOTATION'):
+            if annotation.find('ANNOTATION_VALUE') is None:
+                return False
+    return True
+
 
 @application.route('/download/<filename>')
 def download_file(filename):

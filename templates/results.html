@@ -18,6 +18,16 @@
         </div>
         <div class="row mt-5">
             <div class="col-md-12">
+                <h3>Validity Check Results</h3>
+                <ul class="list-group mb-3">
+                    {% for check in validity_checks %}
+                    <li class="list-group-item">{{ check }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="row mt-5">
+            <div class="col-md-12">
                 <h3>Transformed Annotations</h3>
                 <table class="table table-bordered">
                     <thead>
