@@ -1,76 +1,115 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Upload File</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <title>ELAN Annotation Converter</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+    <style>
+        .converter-box {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .features-list {
+            margin-top: 30px;
+        }
+    </style>
 </head>
 <body>
-<div class="container mt-5">
-    <h1 class="mb-3">Upload File</h1>
-    <form action="{{ url_for('results') }}" method="post" enctype="multipart/form-data">
-        <div class="form-group">
-            <label for="file">Please upload an ELAN file with Makurap transcription in IPA. The transcription to orthography transformation can be tested below. </label>
-            <input type="file" class="form-control" id="file" name="file">
+    <div class="container">
+        <div class="row mt-5">
+            <div class="col-md-12 text-center">
+                <h1>ELAN Phonetic to Orthographic Converter</h1>
+                <p class="lead">Upload your .eaf file to convert phonetic transcriptions to orthographic format</p>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Upload</button>
-    </form>
-
-    <h2 class="mt-5">Real-time IPA to Orthography Transformation</h2>
-    <div class="form-group">
-        <label for="ipainput">Phonetic Input</label>
-        <textarea class="form-control" id="phonetic-input" rows="3"></textarea>
+        
+        <div class="form-container">
+            {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Upload ELAN File</h5>
+                    <form action="/results" method="post" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="file">Select .eaf file:</label>
+                            <input type="file" class="form-control-file" id="file" name="file" accept=".eaf">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Process File</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="converter-box">
+                <h5>Quick Converter</h5>
+                <p>Try converting individual text:</p>
+                
+                <div class="form-group">
+                    <label for="phonetic-text">Phonetic Text:</label>
+                    <textarea class="form-control" id="phonetic-text" rows="2"></textarea>
+                </div>
+                <button id="convert-to-ortho" class="btn btn-info btn-sm">Convert to Orthographic</button>
+                
+                <div class="form-group mt-3">
+                    <label for="orthographic-text">Orthographic Text:</label>
+                    <textarea class="form-control" id="orthographic-text" rows="2"></textarea>
+                </div>
+                <button id="convert-to-ipa" class="btn btn-info btn-sm">Convert to Phonetic</button>
+            </div>
+            
+            <div class="features-list">
+                <h5>Features:</h5>
+                <ul>
+                    <li>Converts phonetic transcriptions to orthographic format</li>
+                    <li>Display results in an easy-to-read table</li>
+                    <li>Export results in ELAN-compatible .eaf format</li>
+                    <li>Export results as CSV for further analysis</li>
+                </ul>
+            </div>
+        </div>
     </div>
-    <div class="form-group">
-        <label for="orthographic-output">Orthographic Output</label>
-        <textarea class="form-control" id="orthographic-output" rows="3" readonly></textarea>
-    </div>
-
-    <h2 class="mt-5">Real-time Orthography to IPA Transformation</h2>
-    <div class="form-group">
-        <label for="orthographic-input">Orthographic Input</label>
-        <textarea class="form-control" id="orthographic-input" rows="3"></textarea>
-    </div>
-    <div class="form-group">
-        <label for="ipa-output">IPA Output</label>
-        <textarea class="form-control" id="ipa-output" rows="3" readonly></textarea>
-    </div>
-
-    <p><b>Authors:</b> Niko Partanen, Jack Rueter and Ana Vilacy Galucio. For questions, please contact nikotapiopartanen@gmail.com. This work is part of Amazonian-Uralic collaboration between University of Helsinki and Universidade Federal do Pará (UFPA).</p>
-</div>
-
-
-<script>
-    $(document).ready(function() {
-        $('#phonetic-input').on('input', function() {
-            var phoneticText = $(this).val();
-            $.ajax({
-                url: "{{ url_for('transform_ipa') }}",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify({phonetic_text: phoneticText}),
-                success: function(response) {
-                    $('#orthographic-output').val(response.orthographic_text);
-                }
+    
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            $('#convert-to-ortho').click(function() {
+                const phoneticText = $('#phonetic-text').val();
+                $.ajax({
+                    url: '/transform_ipa',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({phonetic_text: phoneticText}),
+                    success: function(response) {
+                        $('#orthographic-text').val(response.orthographic_text);
+                    }
+                });
+            });
+            
+            $('#convert-to-ipa').click(function() {
+                const orthoText = $('#orthographic-text').val();
+                $.ajax({
+                    url: '/transform_orthography',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({orthographic_text: orthoText}),
+                    success: function(response) {
+                        $('#phonetic-text').val(response.phonetic_text);
+                    }
+                });
             });
         });
-    });
-
-    $(document).ready(function() {
-        $('#orthographic-input').on('input', function() {
-            var orthographicText = $(this).val();
-            $.ajax({
-                url: "{{ url_for('transform_orthography') }}",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify({orthographic_text: orthographicText}),
-                success: function(response) {
-                    $('#ipa-output').val(response.phonetic_text);
-                }
-            });
-        });
-    });
-</script>
+    </script>
 </body>
 </html>

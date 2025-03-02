@@ -1,56 +1,83 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="utf-8">
-    <title>File Statistics</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <title>ELAN Annotation Converter - Results</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+    <style>
+        .table-container {
+            margin-top: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .download-options {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .btn-space {
+            margin-right: 10px;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
     <div class="container">
-        <div class="py-5 text-center">
-            <h2>File processed successfully</h2>
+        <h1 class="mt-4 mb-4">Phonetic to Orthographic Conversion Results</h1>
+        
+        {% if validity_checks %}
+        <div class="alert alert-warning">
+            <strong>Warning:</strong> The following issues were detected:
+            <ul>
+                {% for check in validity_checks %}
+                <li>{{ check }}</li>
+                {% endfor %}
+            </ul>
         </div>
-        <div class="row">
-            <div class="col-md-12 order-md-1">
-                <a href="{{ url_for('download_file', filename=download_filename) }}" class="btn btn-primary">Download ELAN file with Makurap orthography tier completed automatically</a>
-                <a href="/" class="btn btn-secondary btn-lg btn-block">Go back</a>
-            </div>
+        {% endif %}
+        
+        <div class="download-options">
+            <h4>Download Options</h4>
+            <p>You can download the results in different formats:</p>
+            <a href="{{ url_for('download_file', filename=download_filename) }}" class="btn btn-primary btn-space">
+                Download ELAN File (.eaf)
+            </a>
+            <a href="{{ url_for('download_csv', filename=original_filename) }}" class="btn btn-success btn-space">
+                Download as CSV
+            </a>
+            <a href="/" class="btn btn-secondary">Upload Another File</a>
         </div>
-        <div class="row mt-5">
-            <div class="col-md-12">
-                <h3>Validity Check Results</h3>
-                <ul class="list-group mb-3">
-                    {% for check in validity_checks %}
-                    <li class="list-group-item">{{ check }}</li>
+        
+        <h3>Annotation Results</h3>
+        <p>Total annotations: {{ annotations|length }}</p>
+        
+        <div class="table-container">
+            <table class="table table-striped table-bordered">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Participant</th>
+                        <th>Start Time (s)</th>
+                        <th>End Time (s)</th>
+                        <th>Phonetic</th>
+                        <th>Orthographic</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for annotation in annotations %}
+                    <tr>
+                        <td>{{ annotation.participant }}</td>
+                        <td>{{ annotation.start_time }}</td>
+                        <td>{{ annotation.end_time }}</td>
+                        <td>{{ annotation.phonetic }}</td>
+                        <td>{{ annotation.orthographic }}</td>
+                    </tr>
                     {% endfor %}
-                </ul>
-            </div>
-        </div>
-        <div class="row mt-5">
-            <div class="col-md-12">
-                <h3>Transformed Annotations</h3>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Original Annotation</th>
-                            <th>Transformed Annotation</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for original, transformed in annotations %}
-                        <tr>
-                            <td>{{ original }}</td>
-                            <td>{{ transformed }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                </tbody>
+            </table>
         </div>
     </div>
-
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"></script>
 </body>
 </html>
